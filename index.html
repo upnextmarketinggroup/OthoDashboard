@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing Progress Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --blue: #0060A8;
+    --blue-dark: #004b86;
+    --pink: #D84890;
+    --bg: #F7F5F1;
+    --card: #FFFFFF;
+    --text: #1F2937;
+    --text-soft: #6B7280;
+    --border: #ECE8E1;
+    --shadow: 0 4px 16px rgba(31, 41, 55, 0.06), 0 1px 3px rgba(31, 41, 55, 0.04);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    margin: 0;
+    color: var(--text);
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* Header */
+  header.top {
+    background: linear-gradient(135deg, var(--blue) 0%, #003f70 100%);
+    color: #fff;
+    border-radius: var(--radius);
+    padding: 32px 36px;
+    box-shadow: var(--shadow);
+    margin-bottom: 28px;
+  }
+
+  header.top .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  header.top h1 {
+    font-size: 32px;
+    color: #fff;
+  }
+
+  header.top .subtitle {
+    margin-top: 6px;
+    font-size: 15px;
+    opacity: 0.85;
+  }
+
+  .location-toggle {
+    display: inline-flex;
+    background: rgba(255,255,255,0.14);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 2px;
+  }
+
+  .location-toggle button {
+    border: none;
+    background: transparent;
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: 999px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .location-toggle button.active {
+    background: #fff;
+    color: var(--blue-dark);
+  }
+
+  .month-badge {
+    display: inline-block;
+    margin-top: 14px;
+    background: rgba(255,255,255,0.14);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Section titles */
+  .section-title {
+    font-size: 22px;
+    margin: 40px 0 18px;
+  }
+  .section-sub {
+    font-size: 14px;
+    color: var(--text-soft);
+    margin-top: -12px;
+    margin-bottom: 20px;
+  }
+
+  /* Stat cards */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    border: 1px solid var(--border);
+  }
+
+  .stat-card .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .stat-card .value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 34px;
+    margin-top: 10px;
+    color: var(--blue-dark);
+  }
+
+  .stat-card.accent .value { color: var(--pink); }
+
+  .stat-card .foot {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-soft);
+  }
+
+  /* Funnel */
+  .funnel-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    position: relative;
+  }
+
+  .funnel-card {
+    position: relative;
+  }
+
+  .funnel-card .stage-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--blue);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 12px;
+  }
+
+  .funnel-card h3 {
+    font-size: 19px;
+    margin-bottom: 10px;
+  }
+
+  .funnel-metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 14px;
+  }
+  .funnel-metric-row:last-of-type { border-bottom: none; }
+
+  .funnel-metric-row .m-label { color: var(--text-soft); }
+  .funnel-metric-row .m-value { font-weight: 700; color: var(--text); }
+
+  .funnel-desc {
+    margin-top: 14px;
+    font-size: 13.5px;
+    color: var(--text-soft);
+    line-height: 1.5;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Charts */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 20px;
+  }
+
+  .chart-card h3 {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+  .chart-card .chart-caption {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-bottom: 16px;
+  }
+  .chart-card canvas {
+    max-height: 300px;
+  }
+
+  /* Table */
+  .table-card {
+    padding: 0;
+    overflow: hidden;
+  }
+  .table-card-head {
+    padding: 24px 24px 0;
+  }
+  .table-card-head h3 { font-size: 19px; }
+  .table-card-head .chart-caption {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin: 6px 0 18px;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  table.leads {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 480px;
+  }
+
+  table.leads th {
+    text-align: left;
+    padding: 12px 24px;
+    background: #FAF8F5;
+    color: var(--text-soft);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  table.leads th .arrow {
+    margin-left: 4px;
+    opacity: 0.4;
+    font-size: 11px;
+  }
+  table.leads th.sorted .arrow { opacity: 1; color: var(--blue); }
+
+  table.leads td {
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  table.leads tr:last-child td { border-bottom: none; }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .pill.booked-yes { background: #E6F3EA; color: #1E7A43; }
+  .pill.booked-no { background: #F4E9EE; color: #A34568; }
+
+  .loc-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--blue-dark);
+    background: #E9F1F8;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-soft);
+  }
+  .empty-state .icon { font-size: 34px; margin-bottom: 10px; }
+  .empty-state .msg { font-size: 15px; }
+
+  /* Data source panel */
+  details.data-panel {
+    margin-top: 44px;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 20px 24px;
+  }
+  details.data-panel summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--blue-dark);
+    list-style: none;
+  }
+  details.data-panel summary::-webkit-details-marker { display: none; }
+  details.data-panel summary::before {
+    content: '\25B8';
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.15s ease;
+  }
+  details.data-panel[open] summary::before { transform: rotate(90deg); }
+
+  .data-panel .panel-body {
+    margin-top: 18px;
+  }
+
+  .upload-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .upload-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .upload-row label { font-weight: 600; color: var(--text-soft); }
+  .upload-row input[type="file"] {
+    font-size: 13px;
+    padding: 8px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: #FAF8F5;
+  }
+  .data-status {
+    font-size: 13px;
+    margin-top: 14px;
+    color: var(--text-soft);
+  }
+  .data-status .ok { color: #1E7A43; font-weight: 600; }
+  .data-status .fallback { color: #A36A1E; font-weight: 600; }
+
+  footer.foot-note {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-soft);
+    margin-top: 40px;
+  }
+
+  /* Responsive */
+  @media (max-width: 980px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .funnel-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+    .upload-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 20px 14px 60px; }
+    header.top { padding: 24px 20px; }
+    header.top h1 { font-size: 24px; }
+    .stat-grid { grid-template-columns: 1fr; }
+    .funnel-grid { grid-template-columns: 1fr; }
+    .stat-card .value { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="header-row">
+      <div>
+        <h1>Glendale &amp; Brentwood LA Orthodontics</h1>
+        <div class="subtitle">Monthly Marketing Progress Report</div>
+        <div class="month-badge" id="monthBadge">June 2026</div>
+      </div>
+      <div class="location-toggle" id="locationToggle">
+        <button data-loc="both" class="active">Both Locations</button>
+        <button data-loc="glendale">Glendale</button>
+        <button data-loc="brentwood">Brentwood</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="dashboardBody">
+
+    <h2 class="section-title">At a Glance</h2>
+    <div class="section-sub">The headline numbers for the month.</div>
+    <div class="stat-grid" id="statGrid"></div>
+
+    <h2 class="section-title">How Your Marketing Dollars Turn Into Patients</h2>
+    <div class="section-sub">Each stage of the journey, from someone seeing an ad to booking a call.</div>
+    <div class="funnel-grid" id="funnelGrid"></div>
+
+    <h2 class="section-title">Trends</h2>
+    <div class="section-sub">A closer look at spend, calls, and location performance.</div>
+    <div class="chart-grid">
+      <div class="card chart-card">
+        <h3>Daily Ad Spend vs. Booked Calls</h3>
+        <div class="chart-caption">How daily spend tracks against booked calls across the month.</div>
+        <canvas id="spendCallsChart"></canvas>
+        <div class="empty-state" id="spendCallsEmpty" style="display:none;">
+          <div class="icon">&#128200;</div>
+          <div class="msg">No daily data available for this selection yet.</div>
+        </div>
+      </div>
+      <div class="card chart-card">
+        <h3>Location Comparison</h3>
+        <div class="chart-caption">Booked calls and cost per booked call, side by side.</div>
+        <canvas id="locationCompareChart"></canvas>
+        <div class="empty-state" id="locationCompareEmpty" style="display:none;">
+          <div class="icon">&#128202;</div>
+          <div class="msg">Not enough data to compare locations yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Leads This Month</h2>
+    <div class="section-sub">Every inquiry captured from the practice lead sheet.</div>
+    <div class="card table-card">
+      <div class="table-card-head">
+        <h3>Lead Detail</h3>
+        <div class="chart-caption">Click a column header to sort.</div>
+      </div>
+      <div class="table-scroll">
+        <table class="leads" id="leadsTable">
+          <thead>
+            <tr>
+              <th data-key="date">Date <span class="arrow">&#9650;</span></th>
+              <th data-key="interested_in">Interested In <span class="arrow">&#9650;</span></th>
+              <th data-key="booked">Booked <span class="arrow">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody id="leadsTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="leadsEmpty" style="display:none;">
+        <div class="icon">&#128203;</div>
+        <div class="msg">No leads recorded for this location yet.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <details class="data-panel">
+    <summary>Data Sources &amp; File Upload</summary>
+    <div class="panel-body">
+      <div class="section-sub" style="margin:0 0 4px;">
+        This dashboard reads two CSV exports per location each month: a Meta Ads Manager export and the practice lead
+        sheet. It first looks in the <code>/data</code> folder next to this file. If none is found (for example, when
+        opening this file directly from your computer), it falls back to sample data so the layout still renders. Use
+        the uploaders below to load your own files for any location without needing a server.
+      </div>
+      <div class="upload-grid">
+        <div class="upload-row">
+          <label for="uploadMetaGlendale">Glendale &mdash; Meta Ads CSV</label>
+          <input type="file" id="uploadMetaGlendale" accept=".csv">
+        </div>
+        <div class="upload-row">
+          <label for="uploadLeadsGlendale">Glendale &mdash; Leads CSV</label>
+          <input type="file" id="uploadLeadsGlendale" accept=".csv">
+        </div>
+        <div class="upload-row">
+          <label for="uploadMetaBrentwood">Brentwood &mdash; Meta Ads CSV</label>
+          <input type="file" id="uploadMetaBrentwood" accept=".csv">
+        </div>
+        <div class="upload-row">
+          <label for="uploadLeadsBrentwood">Brentwood &mdash; Leads CSV</label>
+          <input type="file" id="uploadLeadsBrentwood" accept=".csv">
+        </div>
+      </div>
+      <div class="data-status" id="dataStatus"></div>
+    </div>
+  </details>
+
+  <footer class="foot-note">Prepared for Glendale &amp; Brentwood LA Orthodontics &middot; Figures reflect ad platform and lead sheet data only.</footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------------------
+   * Sample data (embedded so the dashboard renders immediately, even when
+   * opened directly from disk with no server and no /data folder present).
+   * ------------------------------------------------------------------- */
+  const SAMPLE = {
+    metaGlendale: `date,amount_spent,impressions,reach,frequency,link_clicks,ctr,cpc,thruplays
+2026-06-01,59.74,9633,5748,1.68,153,1.59,0.39,1530
+2026-06-02,61.01,12483,7050,1.77,231,1.85,0.26,1278
+2026-06-03,45.43,8416,4666,1.8,131,1.56,0.35,1279
+2026-06-04,56.53,9667,6285,1.54,227,2.35,0.25,971
+2026-06-05,65.4,12746,7747,1.65,191,1.5,0.34,2250
+2026-06-06,49.44,8139,4610,1.77,195,2.4,0.25,1206
+2026-06-07,65.44,12858,8244,1.56,330,2.57,0.2,1675
+2026-06-08,56.77,11437,7492,1.53,277,2.42,0.2,1671
+2026-06-09,61.96,10055,5919,1.7,169,1.68,0.37,1069
+2026-06-10,45.91,7577,4525,1.67,161,2.13,0.29,978
+2026-06-11,50.59,8624,5134,1.68,217,2.52,0.23,1309
+2026-06-12,58.71,9895,6668,1.48,149,1.51,0.39,1289
+2026-06-13,71.64,13754,8866,1.55,301,2.19,0.24,2302
+2026-06-14,64.38,11038,6131,1.8,189,1.71,0.34,1340
+2026-06-15,45.17,9356,6539,1.43,160,1.71,0.28,1426
+2026-06-16,51.45,10584,6646,1.59,174,1.64,0.3,1267
+2026-06-17,57.09,9884,6418,1.54,244,2.47,0.23,1304
+2026-06-18,45.46,9541,6073,1.57,135,1.42,0.34,990
+2026-06-19,41.73,7985,5466,1.46,148,1.85,0.28,839
+2026-06-20,50.98,10695,6844,1.56,274,2.56,0.19,1805
+2026-06-21,38.39,7525,5010,1.5,150,2.0,0.26,913
+2026-06-22,59.79,9899,6176,1.6,187,1.89,0.32,1745
+2026-06-23,67.78,11737,7454,1.57,180,1.53,0.38,2030
+2026-06-24,67.6,11824,7787,1.52,247,2.09,0.27,1326
+2026-06-25,63.93,11952,8155,1.47,238,1.99,0.27,1195
+2026-06-26,49.02,7890,5585,1.41,193,2.44,0.25,1313
+2026-06-27,48.46,7893,5519,1.43,200,2.53,0.24,843
+2026-06-28,54.52,8911,6053,1.47,205,2.3,0.27,982
+2026-06-29,54.16,10154,6042,1.68,247,2.43,0.22,1359
+2026-06-30,45.2,8450,5696,1.48,132,1.56,0.34,1055`,
+
+    leadsGlendale: `date,full_name,interested_in,booked
+2026-06-02,David Kim,Free Consultation,no
+2026-06-04,Amanda Ruiz,Retainers,no
+2026-06-05,Marcus Bell,Traditional Braces,no
+2026-06-10,Carlos Mendoza,Traditional Braces,no
+2026-06-11,Ethan Moreno,Traditional Braces,no
+2026-06-12,Maria Gonzalez,Traditional Braces,no
+2026-06-14,Natalie Cruz,Retainers,no
+2026-06-15,Victor Salas,Traditional Braces,yes
+2026-06-18,Ethan Moreno,Invisalign,yes
+2026-06-19,James Chen,Retainers,yes
+2026-06-20,Chloe Bishop,Retainers,yes
+2026-06-22,Chloe Bishop,Traditional Braces,yes
+2026-06-23,Justin Vargas,Traditional Braces,yes
+2026-06-24,Jessica Lee,Invisalign,no
+2026-06-26,Jessica Lee,Free Consultation,no
+2026-06-27,Olivia Flores,Kids Orthodontics,yes
+2026-06-28,Maria Gonzalez,Invisalign,no
+2026-06-29,Jessica Lee,Traditional Braces,no
+2026-06-30,Jessica Lee,Invisalign,yes`,
+
+    metaBrentwood: `date,amount_spent,impressions,reach,frequency,link_clicks,ctr,cpc,thruplays
+2026-06-01,51.86,9982,6233,1.6,172,1.72,0.3,1094
+2026-06-02,30.29,5358,3482,1.54,74,1.38,0.41,630
+2026-06-03,25.99,4978,2931,1.7,109,2.19,0.24,840
+2026-06-04,25.98,4465,2963,1.51,61,1.36,0.43,493
+2026-06-05,50.19,9463,5965,1.59,193,2.04,0.26,1557
+2026-06-06,29.33,4834,3012,1.6,78,1.61,0.38,664
+2026-06-07,44.41,8600,6168,1.39,105,1.22,0.42,1137
+2026-06-08,33.5,6803,4029,1.69,90,1.33,0.37,924
+2026-06-09,35.81,6228,3689,1.69,138,2.21,0.26,843
+2026-06-10,48.12,9023,5040,1.79,208,2.3,0.23,1505
+2026-06-11,51.13,10549,7323,1.44,137,1.3,0.37,1464
+2026-06-12,29.98,5397,3022,1.79,84,1.55,0.36,965
+2026-06-13,31.43,6260,3927,1.59,101,1.61,0.31,1105
+2026-06-14,51.87,9740,6546,1.49,126,1.29,0.41,1205
+2026-06-15,51.12,9659,6202,1.56,193,2.0,0.26,1010
+2026-06-16,40.36,7472,5192,1.44,96,1.29,0.42,1321
+2026-06-17,26.24,4442,2892,1.54,85,1.91,0.31,527
+2026-06-18,27.36,5595,3311,1.69,101,1.81,0.27,836
+2026-06-19,35.74,6761,4319,1.57,150,2.22,0.24,786
+2026-06-20,44.05,7573,4674,1.62,145,1.91,0.3,939
+2026-06-21,32.85,6490,3649,1.78,107,1.65,0.31,1167
+2026-06-22,51.89,8492,4978,1.71,121,1.42,0.43,1483
+2026-06-23,48.66,9924,6081,1.63,128,1.29,0.38,1654
+2026-06-24,43.7,8328,5978,1.39,157,1.88,0.28,838
+2026-06-25,46.88,8202,5436,1.51,183,2.23,0.26,908
+2026-06-26,27.23,4502,2899,1.55,64,1.43,0.43,668
+2026-06-27,44.09,7503,4935,1.52,107,1.42,0.41,1043
+2026-06-28,49.35,9983,5647,1.77,161,1.61,0.31,1219
+2026-06-29,24.1,4785,3150,1.52,67,1.41,0.36,762
+2026-06-30,39.45,7155,3947,1.81,85,1.19,0.46,1220`,
+
+    leadsBrentwood: `date,full_name,interested_in,booked
+2026-06-04,Jessica Lee,Invisalign,no
+2026-06-07,Maria Gonzalez,Kids Orthodontics,no
+2026-06-11,Daniel Choi,Traditional Braces,yes
+2026-06-12,Sofia Ramirez,Free Consultation,no
+2026-06-13,Justin Vargas,Invisalign,no
+2026-06-14,Brian Patel,Kids Orthodontics,yes
+2026-06-17,Ryan Yoo,Free Consultation,yes
+2026-06-19,Brian Patel,Kids Orthodontics,yes
+2026-06-20,Ryan Yoo,Retainers,no
+2026-06-24,Amanda Ruiz,Traditional Braces,no
+2026-06-26,Brian Patel,Retainers,no
+2026-06-30,Maria Gonzalez,Free Consultation,yes`
+  };
+
+  const MONTH_LABEL = "June 2026";
+  const DATA_PATHS = {
+    metaGlendale: "./data/meta_glendale_2026-06.csv",
+    leadsGlendale: "./data/leads_glendale_2026-06.csv",
+    metaBrentwood: "./data/meta_brentwood_2026-06.csv",
+    leadsBrentwood: "./data/leads_brentwood_2026-06.csv"
+  };
+
+  const state = {
+    location: "both",
+    sortKey: "date",
+    sortDir: "asc",
+    sources: { metaGlendale: "sample", leadsGlendale: "sample", metaBrentwood: "sample", leadsBrentwood: "sample" },
+    data: {
+      glendale: { meta: [], leads: [] },
+      brentwood: { meta: [], leads: [] }
+    }
+  };
+
+  let spendCallsChart = null;
+  let locationCompareChart = null;
+
+  /* ---------------------------------------------------------------------
+   * CSV parsing
+   * ------------------------------------------------------------------- */
+  function parseCSV(text) {
+    const lines = text.replace(/\r/g, "").split("\n").map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(",").map(h => h.trim());
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split(",").map(c => c.trim());
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = cells[idx] !== undefined ? cells[idx] : ""; });
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function parseMetaRows(rows) {
+    return rows.map(r => ({
+      date: r.date,
+      amount_spent: parseFloat(r.amount_spent) || 0,
+      impressions: parseInt(r.impressions, 10) || 0,
+      reach: parseInt(r.reach, 10) || 0,
+      frequency: parseFloat(r.frequency) || 0,
+      link_clicks: parseInt(r.link_clicks, 10) || 0,
+      ctr: parseFloat(r.ctr) || 0,
+      cpc: parseFloat(r.cpc) || 0,
+      thruplays: parseInt(r.thruplays, 10) || 0
+    })).filter(r => r.date);
+  }
+
+  function parseLeadRows(rows) {
+    return rows.map(r => ({
+      date: r.date,
+      full_name: r.full_name || "",
+      interested_in: r.interested_in || "",
+      booked: (r.booked || "").trim().toLowerCase() === "yes" ? "yes" : "no"
+    })).filter(r => r.date);
+  }
+
+  /* ---------------------------------------------------------------------
+   * Loading: try /data folder first, fall back to embedded sample data.
+   * ------------------------------------------------------------------- */
+  function fetchText(path) {
+    if (typeof fetch !== "function" || location.protocol === "file:") {
+      return Promise.reject(new Error("fetch unavailable"));
+    }
+    return fetch(path).then(res => {
+      if (!res.ok) throw new Error("not found");
+      return res.text();
+    });
+  }
+
+  function loadAll() {
+    const jobs = [
+      ["metaGlendale", DATA_PATHS.metaGlendale, "glendale", "meta", parseMetaRows],
+      ["leadsGlendale", DATA_PATHS.leadsGlendale, "glendale", "leads", parseLeadRows],
+      ["metaBrentwood", DATA_PATHS.metaBrentwood, "brentwood", "meta", parseMetaRows],
+      ["leadsBrentwood", DATA_PATHS.leadsBrentwood, "brentwood", "leads", parseLeadRows]
+    ];
+
+    const promises = jobs.map(([key, path, loc, kind, parser]) =>
+      fetchText(path)
+        .then(text => {
+          state.data[loc][kind] = parser(parseCSV(text));
+          state.sources[key] = "file";
+        })
+        .catch(() => {
+          state.data[loc][kind] = parser(parseCSV(SAMPLE[key]));
+          state.sources[key] = "sample";
+        })
+    );
+
+    Promise.all(promises).then(() => {
+      updateDataStatus();
+      renderAll();
+    });
+  }
+
+  function updateDataStatus() {
+    const el = document.getElementById("dataStatus");
+    const labels = {
+      metaGlendale: "Glendale Meta Ads",
+      leadsGlendale: "Glendale Leads",
+      metaBrentwood: "Brentwood Meta Ads",
+      leadsBrentwood: "Brentwood Leads"
+    };
+    const parts = Object.keys(labels).map(key => {
+      const src = state.sources[key];
+      const cls = src === "sample" ? "fallback" : "ok";
+      const text = src === "sample" ? "sample data" : "loaded";
+      return `${labels[key]}: <span class="${cls}">${text}</span>`;
+    });
+    el.innerHTML = parts.join(" &nbsp;&middot;&nbsp; ");
+  }
+
+  /* ---------------------------------------------------------------------
+   * Manual upload overrides
+   * ------------------------------------------------------------------- */
+  function wireUpload(inputId, key, loc, kind, parser) {
+    document.getElementById(inputId).addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        state.data[loc][kind] = parser(parseCSV(evt.target.result));
+        state.sources[key] = "file";
+        updateDataStatus();
+        renderAll();
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+   * Aggregation helpers
+   * ------------------------------------------------------------------- */
+  function getLocations() {
+    if (state.location === "glendale") return ["glendale"];
+    if (state.location === "brentwood") return ["brentwood"];
+    return ["glendale", "brentwood"];
+  }
+
+  function combinedMeta(locs) {
+    let rows = [];
+    locs.forEach(l => { rows = rows.concat(state.data[l].meta); });
+    return rows;
+  }
+
+  function combinedLeads(locs) {
+    let rows = [];
+    locs.forEach(l => {
+      state.data[l].leads.forEach(r => rows.push(Object.assign({ location: l }, r)));
+    });
+    return rows;
+  }
+
+  function summarize(locs) {
+    const meta = combinedMeta(locs);
+    const leads = combinedLeads(locs);
+
+    const totalSpend = meta.reduce((s, r) => s + r.amount_spent, 0);
+    const totalImpressions = meta.reduce((s, r) => s + r.impressions, 0);
+    const totalReach = meta.reduce((s, r) => s + r.reach, 0);
+    const totalLinkClicks = meta.reduce((s, r) => s + r.link_clicks, 0);
+    const totalThruplays = meta.reduce((s, r) => s + r.thruplays, 0);
+    const avgCtr = totalImpressions > 0 ? (totalLinkClicks / totalImpressions) * 100 : 0;
+    const avgCpc = totalLinkClicks > 0 ? totalSpend / totalLinkClicks : 0;
+
+    const totalLeads = leads.length;
+    const bookedCalls = leads.filter(l => l.booked === "yes").length;
+    const costPerBooked = bookedCalls > 0 ? totalSpend / bookedCalls : null;
+
+    return {
+      hasMeta: meta.length > 0,
+      hasLeads: leads.length > 0,
+      totalSpend, totalImpressions, totalReach, totalLinkClicks, totalThruplays,
+      avgCtr, avgCpc, totalLeads, bookedCalls, costPerBooked, leads, meta
+    };
+  }
+
+  /* ---------------------------------------------------------------------
+   * Formatting
+   * ------------------------------------------------------------------- */
+  function fmtCurrency(n) {
+    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+  function fmtCurrencyPrecise(n) {
+    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtNumber(n) {
+    return Math.round(n).toLocaleString("en-US");
+  }
+  function fmtPercent(n) {
+    return n.toFixed(2) + "%";
+  }
+  function fmtDate(d) {
+    const parts = d.split("-");
+    if (parts.length !== 3) return d;
+    const dt = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2]));
+    return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+  }
+  function locLabel(l) {
+    return l === "glendale" ? "Glendale" : "Brentwood";
+  }
+
+  /* ---------------------------------------------------------------------
+   * Rendering: headline stats
+   * ------------------------------------------------------------------- */
+  function renderStats(summary) {
+    const grid = document.getElementById("statGrid");
+    const cpb = summary.costPerBooked === null ? "&mdash;" : fmtCurrencyPrecise(summary.costPerBooked);
+
+    grid.innerHTML = `
+      <div class="card stat-card">
+        <div class="label">Total Ad Spend</div>
+        <div class="value">${summary.hasMeta ? fmtCurrency(summary.totalSpend) : "&mdash;"}</div>
+        <div class="foot">Across all active campaigns</div>
+      </div>
+      <div class="card stat-card">
+        <div class="label">Booked Calls</div>
+        <div class="value">${summary.hasLeads ? fmtNumber(summary.bookedCalls) : "&mdash;"}</div>
+        <div class="foot">Confirmed appointments this month</div>
+      </div>
+      <div class="card stat-card accent">
+        <div class="label">Cost Per Booked Call</div>
+        <div class="value">${cpb}</div>
+        <div class="foot">Total ad spend &divide; booked calls</div>
+      </div>
+      <div class="card stat-card">
+        <div class="label">Total Reach</div>
+        <div class="value">${summary.hasMeta ? fmtNumber(summary.totalReach) : "&mdash;"}</div>
+        <div class="foot">People who saw an ad this month</div>
+      </div>
+    `;
+  }
+
+  /* ---------------------------------------------------------------------
+   * Rendering: funnel
+   * ------------------------------------------------------------------- */
+  function renderFunnel(summary) {
+    const grid = document.getElementById("funnelGrid");
+    const cpb = summary.costPerBooked === null ? "&mdash;" : fmtCurrencyPrecise(summary.costPerBooked);
+
+    const stages = [
+      {
+        num: 1,
+        title: "Reach",
+        desc: "How many people saw our ads on Facebook and Instagram.",
+        rows: summary.hasMeta ? [
+          ["Impressions", fmtNumber(summary.totalImpressions)],
+          ["Reach", fmtNumber(summary.totalReach)],
+          ["Video Views", fmtNumber(summary.totalThruplays)]
+        ] : null
+      },
+      {
+        num: 2,
+        title: "Engagement",
+        desc: "How many people showed interest by clicking or watching.",
+        rows: summary.hasMeta ? [
+          ["Click-Through Rate", fmtPercent(summary.avgCtr)],
+          ["Link Clicks", fmtNumber(summary.totalLinkClicks)]
+        ] : null
+      },
+      {
+        num: 3,
+        title: "Traffic",
+        desc: "Visits to the website driven by ad clicks.",
+        rows: summary.hasMeta ? [
+          ["Website Visits (est.)", fmtNumber(summary.totalLinkClicks)],
+          ["Cost Per Click", fmtCurrencyPrecise(summary.avgCpc)]
+        ] : null
+      },
+      {
+        num: 4,
+        title: "Leads & Calls",
+        desc: "New patient inquiries and the calls they turned into.",
+        rows: summary.hasLeads ? [
+          ["Form Fills / Leads", fmtNumber(summary.totalLeads)],
+          ["Booked Calls", fmtNumber(summary.bookedCalls)],
+          ["Cost Per Booked Call", cpb]
+        ] : null
+      }
+    ];
+
+    grid.innerHTML = stages.map(s => `
+      <div class="card funnel-card">
+        <div class="stage-num">${s.num}</div>
+        <h3>${s.title}</h3>
+        ${s.rows ? s.rows.map(([label, value]) => `
+          <div class="funnel-metric-row">
+            <span class="m-label">${label}</span>
+            <span class="m-value">${value}</span>
+          </div>
+        `).join("") : `<div class="funnel-metric-row"><span class="m-label">No data available yet</span></div>`}
+        <div class="funnel-desc">${s.desc}</div>
+      </div>
+    `).join("");
+  }
+
+  /* ---------------------------------------------------------------------
+   * Rendering: charts
+   * ------------------------------------------------------------------- */
+  function renderSpendCallsChart(locs) {
+    const canvas = document.getElementById("spendCallsChart");
+    const emptyEl = document.getElementById("spendCallsEmpty");
+    const meta = combinedMeta(locs);
+    const leads = combinedLeads(locs);
+
+    if (meta.length === 0) {
+      canvas.style.display = "none";
+      emptyEl.style.display = "block";
+      if (spendCallsChart) { spendCallsChart.destroy(); spendCallsChart = null; }
+      return;
+    }
+    canvas.style.display = "block";
+    emptyEl.style.display = "none";
+
+    const spendByDate = {};
+    meta.forEach(r => {
+      spendByDate[r.date] = (spendByDate[r.date] || 0) + r.amount_spent;
+    });
+    const bookedByDate = {};
+    leads.forEach(l => {
+      if (l.booked === "yes") bookedByDate[l.date] = (bookedByDate[l.date] || 0) + 1;
+    });
+
+    const dates = Object.keys(spendByDate).sort();
+    const spendSeries = dates.map(d => Math.round(spendByDate[d] * 100) / 100);
+    const bookedSeries = dates.map(d => bookedByDate[d] || 0);
+    const labels = dates.map(fmtDate);
+
+    if (spendCallsChart) spendCallsChart.destroy();
+    spendCallsChart = new Chart(canvas.getContext("2d"), {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Ad Spend ($)",
+            data: spendSeries,
+            borderColor: "#0060A8",
+            backgroundColor: "rgba(0, 96, 168, 0.08)",
+            yAxisID: "y",
+            tension: 0.3,
+            fill: true,
+            pointRadius: 2
+          },
+          {
+            label: "Booked Calls",
+            data: bookedSeries,
+            borderColor: "#D84890",
+            backgroundColor: "rgba(216, 72, 144, 0.08)",
+            yAxisID: "y1",
+            tension: 0.3,
+            fill: false,
+            pointRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, font: { family: "Inter" } } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: "Inter", size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+          y: {
+            position: "left",
+            title: { display: true, text: "Ad Spend ($)", font: { family: "Inter", size: 11 } },
+            ticks: { callback: v => "$" + v, font: { family: "Inter", size: 11 } },
+            grid: { color: "#ECE8E1" }
+          },
+          y1: {
+            position: "right",
+            title: { display: true, text: "Booked Calls", font: { family: "Inter", size: 11 } },
+            ticks: { precision: 0, font: { family: "Inter", size: 11 } },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+    canvas.style.height = "300px";
+  }
+
+  function renderLocationCompareChart() {
+    const canvas = document.getElementById("locationCompareChart");
+    const emptyEl = document.getElementById("locationCompareEmpty");
+
+    const glendale = summarize(["glendale"]);
+    const brentwood = summarize(["brentwood"]);
+
+    if (!glendale.hasMeta && !brentwood.hasMeta) {
+      canvas.style.display = "none";
+      emptyEl.style.display = "block";
+      if (locationCompareChart) { locationCompareChart.destroy(); locationCompareChart = null; }
+      return;
+    }
+    canvas.style.display = "block";
+    emptyEl.style.display = "none";
+
+    const bookedData = [glendale.bookedCalls, brentwood.bookedCalls];
+    const cpbData = [
+      glendale.costPerBooked === null ? 0 : Math.round(glendale.costPerBooked * 100) / 100,
+      brentwood.costPerBooked === null ? 0 : Math.round(brentwood.costPerBooked * 100) / 100
+    ];
+
+    if (locationCompareChart) locationCompareChart.destroy();
+    locationCompareChart = new Chart(canvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: ["Glendale", "Brentwood"],
+        datasets: [
+          {
+            label: "Booked Calls",
+            data: bookedData,
+            backgroundColor: "#0060A8",
+            borderRadius: 6,
+            yAxisID: "y"
+          },
+          {
+            label: "Cost Per Booked Call ($)",
+            data: cpbData,
+            backgroundColor: "#D84890",
+            borderRadius: 6,
+            yAxisID: "y1"
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, font: { family: "Inter" } } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: "Inter", size: 12 } } },
+          y: {
+            position: "left",
+            title: { display: true, text: "Booked Calls", font: { family: "Inter", size: 11 } },
+            ticks: { precision: 0, font: { family: "Inter", size: 11 } },
+            grid: { color: "#ECE8E1" }
+          },
+          y1: {
+            position: "right",
+            title: { display: true, text: "Cost Per Booked Call ($)", font: { family: "Inter", size: 11 } },
+            ticks: { callback: v => "$" + v, font: { family: "Inter", size: 11 } },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+    canvas.style.height = "300px";
+  }
+
+  /* ---------------------------------------------------------------------
+   * Rendering: leads table
+   * ------------------------------------------------------------------- */
+  function renderTable(locs) {
+    const leads = combinedLeads(locs);
+    const tbody = document.getElementById("leadsTableBody");
+    const emptyEl = document.getElementById("leadsEmpty");
+    const table = document.getElementById("leadsTable");
+
+    if (leads.length === 0) {
+      table.style.display = "none";
+      emptyEl.style.display = "block";
+      return;
+    }
+    table.style.display = "table";
+    emptyEl.style.display = "none";
+
+    const sorted = leads.slice().sort((a, b) => {
+      let av = a[state.sortKey];
+      let bv = b[state.sortKey];
+      if (state.sortKey === "date") {
+        av = new Date(av); bv = new Date(bv);
+      } else {
+        av = (av || "").toLowerCase();
+        bv = (bv || "").toLowerCase();
+      }
+      if (av < bv) return state.sortDir === "asc" ? -1 : 1;
+      if (av > bv) return state.sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    tbody.innerHTML = sorted.map(l => `
+      <tr>
+        <td>${fmtDate(l.date)}</td>
+        <td>${l.interested_in}${locs.length > 1 ? `<span class="loc-tag">${locLabel(l.location)}</span>` : ""}</td>
+        <td><span class="pill booked-${l.booked}">${l.booked === "yes" ? "Booked" : "Not booked"}</span></td>
+      </tr>
+    `).join("");
+
+    document.querySelectorAll("table.leads th").forEach(th => {
+      th.classList.toggle("sorted", th.dataset.key === state.sortKey);
+      const arrow = th.querySelector(".arrow");
+      if (th.dataset.key === state.sortKey) {
+        arrow.innerHTML = state.sortDir === "asc" ? "&#9650;" : "&#9660;";
+      }
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+   * Master render
+   * ------------------------------------------------------------------- */
+  function renderAll() {
+    const locs = getLocations();
+    const summary = summarize(locs);
+    renderStats(summary);
+    renderFunnel(summary);
+    renderSpendCallsChart(locs);
+    renderLocationCompareChart();
+    renderTable(locs);
+  }
+
+  /* ---------------------------------------------------------------------
+   * Wiring
+   * ------------------------------------------------------------------- */
+  document.getElementById("monthBadge").textContent = MONTH_LABEL;
+
+  document.getElementById("locationToggle").addEventListener("click", function (e) {
+    const btn = e.target.closest("button[data-loc]");
+    if (!btn) return;
+    state.location = btn.dataset.loc;
+    document.querySelectorAll("#locationToggle button").forEach(b => b.classList.toggle("active", b === btn));
+    renderAll();
+  });
+
+  document.querySelectorAll("table.leads th[data-key]").forEach(th => {
+    th.addEventListener("click", function () {
+      const key = th.dataset.key;
+      if (state.sortKey === key) {
+        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+      } else {
+        state.sortKey = key;
+        state.sortDir = "asc";
+      }
+      renderTable(getLocations());
+    });
+  });
+
+  wireUpload("uploadMetaGlendale", "metaGlendale", "glendale", "meta", parseMetaRows);
+  wireUpload("uploadLeadsGlendale", "leadsGlendale", "glendale", "leads", parseLeadRows);
+  wireUpload("uploadMetaBrentwood", "metaBrentwood", "brentwood", "meta", parseMetaRows);
+  wireUpload("uploadLeadsBrentwood", "leadsBrentwood", "brentwood", "leads", parseLeadRows);
+
+  loadAll();
+})();
+</script>
+
+</body>
+</html>
