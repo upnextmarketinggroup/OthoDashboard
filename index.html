@@ -303,6 +303,34 @@
   td.date { color: var(--text-soft); font-weight: 500; white-space: nowrap; }
   td.views { font-weight: 700; color: var(--blue); }
 
+  /* ---------- Mobile sort control (hidden on desktop) ---------- */
+  .mobile-sort { display: none; }
+  .mobile-sort label {
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-soft);
+  }
+  .mobile-sort select {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    background: #faf8f4;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 11px 14px;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+  }
+  .hint-mobile { display: none; }
+
   /* ---------- Chart ---------- */
   .chart-box { position: relative; height: 380px; }
 
@@ -325,12 +353,76 @@
     .stats { grid-template-columns: repeat(2, 1fr); }
     .stat-card .value { font-size: 30px; }
   }
+
+  /* Tablet / large phone: stack the table into cards */
+  @media (max-width: 680px) {
+    .section-head { flex-wrap: wrap; }
+
+    /* Show mobile sort menu, hide desktop hint */
+    .mobile-sort {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .hint-desktop { display: none; }
+    .hint-mobile { display: inline; }
+
+    /* Turn each table row into a stacked card */
+    #postsTable { min-width: 0; }
+    #postsTable thead { display: none; }
+    #postsTable, #postsTable tbody, #postsTable tr, #postsTable td { display: block; width: 100%; }
+
+    #postsTable tbody tr {
+      background: #faf8f4;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+    #postsTable tbody tr:last-child { margin-bottom: 0; }
+    #postsTable tbody tr:hover { background: #faf8f4; }
+
+    /* Post title cell = card header */
+    #postsTable td.post-td {
+      text-align: left;
+      padding: 0 0 12px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .post-title { max-width: none; }
+
+    /* Metric cells = label + value rows */
+    #postsTable td:not(.post-td) {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: right;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.06);
+    }
+    #postsTable td:not(.post-td):last-child { border-bottom: none; padding-bottom: 0; }
+    #postsTable td[data-label]::before {
+      content: attr(data-label);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.4px;
+      font-weight: 700;
+      color: var(--text-soft);
+    }
+  }
+
+  /* Phones */
   @media (max-width: 560px) {
+    header.top { padding: 30px 0 40px; }
     .stats { grid-template-columns: 1fr; }
+    .stat-card { min-height: 0; }
     .header-inner { flex-direction: column; align-items: flex-start; }
-    .callout { padding: 20px 22px; }
-    .chart-box { height: 320px; }
-    .post-title { max-width: 220px; }
+    .period-pill { align-self: flex-start; }
+    .callout { padding: 20px 22px; margin-top: -22px; }
+    .section-head { margin: 34px 0 16px; }
+    .panel { padding: 18px 16px 20px; }
+    .chart-box { height: 300px; }
   }
 </style>
 </head>
@@ -364,10 +456,23 @@
   <!-- Posts table -->
   <div class="section-head">
     <h2>This Month's 4 Posts</h2>
-    <span class="hint">Tap any column heading to sort</span>
+    <span class="hint hint-desktop">Tap any column heading to sort</span>
+    <span class="hint hint-mobile">Use the menu below to sort</span>
   </div>
 
   <div class="panel">
+    <div class="mobile-sort">
+      <label for="sortSelect">Sort by</label>
+      <select id="sortSelect">
+        <option value="views:-1">Views (high to low)</option>
+        <option value="reach:-1">Reach (high to low)</option>
+        <option value="interactions:-1">Interactions (high to low)</option>
+        <option value="shares:-1">Shares (high to low)</option>
+        <option value="saves:-1">Saves (high to low)</option>
+        <option value="date:-1">Date (newest first)</option>
+        <option value="date:1">Date (oldest first)</option>
+      </select>
+    </div>
     <div class="table-scroll">
       <table id="postsTable">
         <thead>
@@ -467,37 +572,55 @@
 
     body.innerHTML = sorted.map((p, i) => `
       <tr>
-        <td>
+        <td class="post-td">
           <div class="post-cell">
             <span class="rank">${i + 1}</span>
             <span class="post-title">${p.title}</span>
           </div>
         </td>
-        <td class="date">${p.date}</td>
-        <td class="views">${fmt(p.views)}</td>
-        <td>${fmt(p.reach)}</td>
-        <td>${fmt(p.interactions)}</td>
-        <td>${fmt(p.shares)}</td>
-        <td>${fmt(p.saves)}</td>
+        <td class="date" data-label="Date">${p.date}</td>
+        <td class="views" data-label="Views">${fmt(p.views)}</td>
+        <td data-label="Reach">${fmt(p.reach)}</td>
+        <td data-label="Interactions">${fmt(p.interactions)}</td>
+        <td data-label="Shares">${fmt(p.shares)}</td>
+        <td data-label="Saves">${fmt(p.saves)}</td>
       </tr>`).join("");
   }
 
+  function syncHeaders() {
+    document.querySelectorAll("#postsTable thead th").forEach(h => {
+      const isActive = h.dataset.key === sortKey;
+      h.classList.toggle("sorted", isActive);
+      h.querySelector(".arrow").textContent = isActive ? (sortDir === -1 ? "▼" : "▲") : "";
+    });
+    const sel = document.getElementById("sortSelect");
+    if (sel) sel.value = sortKey + ":" + sortDir;
+  }
+
+  // Column-header sorting (desktop)
   document.querySelectorAll("#postsTable thead th").forEach(th => {
     th.addEventListener("click", () => {
       const key = th.dataset.key;
       if (sortKey === key) { sortDir *= -1; }
       else { sortKey = key; sortDir = (th.dataset.type === "text") ? 1 : -1; }
-
-      document.querySelectorAll("#postsTable thead th").forEach(h => {
-        h.classList.remove("sorted");
-        h.querySelector(".arrow").textContent = "";
-      });
-      th.classList.add("sorted");
-      th.querySelector(".arrow").textContent = sortDir === -1 ? "▼" : "▲";
+      syncHeaders();
       renderTable();
     });
   });
 
+  // Dropdown sorting (mobile)
+  const sortSelect = document.getElementById("sortSelect");
+  if (sortSelect) {
+    sortSelect.addEventListener("change", () => {
+      const [key, dir] = sortSelect.value.split(":");
+      sortKey = key;
+      sortDir = parseInt(dir, 10);
+      syncHeaders();
+      renderTable();
+    });
+  }
+
+  syncHeaders();
   renderTable();
 
   // ---------- Chart ----------
