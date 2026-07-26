@@ -384,9 +384,54 @@
     margin-top: 40px;
   }
 
+  /* Organic content performance */
+  .organic-section { margin-top: 8px; }
+
+  .organic-callout {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--pink);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px 26px;
+    margin-bottom: 24px;
+  }
+  .organic-callout .callout-main {
+    font-family: 'DM Serif Display', serif;
+    font-size: 21px;
+    line-height: 1.35;
+    color: var(--pink);
+  }
+  .organic-callout .callout-sub {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-soft);
+  }
+
+  .organic-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+  }
+
+  .delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1E7A43;
+  }
+  .delta .arrow-up {
+    font-size: 11px;
+    line-height: 1;
+  }
+
   /* Responsive */
   @media (max-width: 980px) {
     .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .organic-stat-grid { grid-template-columns: repeat(2, 1fr); }
     .funnel-grid { grid-template-columns: repeat(2, 1fr); }
     .chart-grid { grid-template-columns: 1fr; }
     .upload-grid { grid-template-columns: 1fr; }
@@ -397,8 +442,10 @@
     header.top { padding: 24px 20px; }
     header.top h1 { font-size: 24px; }
     .stat-grid { grid-template-columns: 1fr; }
+    .organic-stat-grid { grid-template-columns: 1fr; }
     .funnel-grid { grid-template-columns: 1fr; }
     .stat-card .value { font-size: 28px; }
+    .organic-callout .callout-main { font-size: 18px; }
   }
 </style>
 </head>
@@ -479,6 +526,47 @@
       </div>
     </div>
 
+  </div>
+
+  <div class="organic-section">
+    <h2 class="section-title">Organic Content Performance</h2>
+    <div class="section-sub">Reporting period: July 6 to July 25, 2026</div>
+
+    <div class="organic-callout">
+      <div class="callout-main">In just 4 posts this month, the account outperformed everything posted before.</div>
+      <div class="callout-sub">Every core metric is up month over month.</div>
+    </div>
+
+    <div class="organic-stat-grid" id="organicStatGrid"></div>
+
+    <h2 class="section-title">This Month's 4 Posts</h2>
+    <div class="section-sub">Click a column header to sort.</div>
+    <div class="card table-card">
+      <div class="table-scroll">
+        <table class="leads" id="organicPostsTable">
+          <thead>
+            <tr>
+              <th data-key="post">Post <span class="arrow">&#9650;</span></th>
+              <th data-key="date">Date <span class="arrow">&#9650;</span></th>
+              <th data-key="views">Views <span class="arrow">&#9650;</span></th>
+              <th data-key="reach">Reach <span class="arrow">&#9650;</span></th>
+              <th data-key="interactions">Interactions <span class="arrow">&#9650;</span></th>
+              <th data-key="shares">Shares <span class="arrow">&#9650;</span></th>
+              <th data-key="saves">Saves <span class="arrow">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody id="organicPostsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <h2 class="section-title">Views by Post</h2>
+    <div class="section-sub">Total views for each of this month's 4 posts.</div>
+    <div class="card chart-card">
+      <h3>Views by Post</h3>
+      <div class="chart-caption">The highest-performing post is highlighted in pink.</div>
+      <canvas id="organicViewsChart"></canvas>
+    </div>
   </div>
 
   <details class="data-panel">
@@ -1177,6 +1265,143 @@
   wireUpload("uploadLeadsBrentwood", "leadsBrentwood", "brentwood", "leads", parseLeadRows);
 
   loadAll();
+})();
+</script>
+
+<script>
+/* ---------------------------------------------------------------------
+ * Organic Content Performance (Instagram + Facebook organic only).
+ * Self-contained: does not touch the paid dashboard above.
+ * ------------------------------------------------------------------- */
+(function () {
+  "use strict";
+
+  const STATS = [
+    { label: "Total Views", value: 23300, delta: "+73.6%", sub: "Instagram 20,288 / Facebook 3,055" },
+    { label: "Accounts Reached", value: 4800, delta: "+72.3%", sub: "" },
+    { label: "Content Interactions", value: 989, delta: "+76%", sub: "" },
+    { label: "New Follows", value: 84, delta: "+64.7%", sub: "" },
+    { label: "Profile Visits", value: 527, delta: "+18.4%", sub: "" }
+  ];
+
+  const POSTS = [
+    { post: "Meet Dr. Amir — the orthodontist behind the practice", short: "Meet Dr. Amir", date: "2026-07-13", views: 3557, reach: 337, interactions: 258, shares: 11, saves: 4 },
+    { post: "3 things people get wrong about orthodontics", short: "3 Things Wrong", date: "2026-07-22", views: 3415, reach: 340, interactions: 212, shares: 22, saves: 19 },
+    { post: "From simple to complex, Dr. Amir walks through it", short: "Simple to Complex", date: "2026-07-15", views: 1931, reach: 243, interactions: 113, shares: 4, saves: 5 },
+    { post: "“Wears it every night without fail” retainer post", short: "Retainer Post", date: "2026-07-20", views: 2788, reach: 132, interactions: 101, shares: 2, saves: 2 }
+  ];
+
+  const sort = { key: "views", dir: "desc" };
+
+  function fmtNumber(n) {
+    return Math.round(n).toLocaleString("en-US");
+  }
+  function fmtShortDate(d) {
+    const p = d.split("-");
+    if (p.length !== 3) return d;
+    const dt = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  }
+
+  /* Stat cards — same card style as the At a Glance row, with a green up delta. */
+  function renderStats() {
+    const grid = document.getElementById("organicStatGrid");
+    grid.innerHTML = STATS.map(s => `
+      <div class="card stat-card">
+        <div class="label">${s.label}</div>
+        <div class="value">${fmtNumber(s.value)}</div>
+        <div class="delta"><span class="arrow-up">&#9650;</span>${s.delta}</div>
+        ${s.sub ? `<div class="foot">${s.sub}</div>` : ""}
+      </div>
+    `).join("");
+  }
+
+  /* Sortable posts table. */
+  function renderTable() {
+    const tbody = document.getElementById("organicPostsBody");
+    const sorted = POSTS.slice().sort((a, b) => {
+      let av = a[sort.key], bv = b[sort.key];
+      if (typeof av === "string") { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+      if (av < bv) return sort.dir === "asc" ? -1 : 1;
+      if (av > bv) return sort.dir === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    tbody.innerHTML = sorted.map(p => `
+      <tr>
+        <td>${p.post}</td>
+        <td>${fmtShortDate(p.date)}</td>
+        <td>${fmtNumber(p.views)}</td>
+        <td>${fmtNumber(p.reach)}</td>
+        <td>${fmtNumber(p.interactions)}</td>
+        <td>${fmtNumber(p.shares)}</td>
+        <td>${fmtNumber(p.saves)}</td>
+      </tr>
+    `).join("");
+
+    document.querySelectorAll("#organicPostsTable th").forEach(th => {
+      th.classList.toggle("sorted", th.dataset.key === sort.key);
+      const arrow = th.querySelector(".arrow");
+      if (th.dataset.key === sort.key) {
+        arrow.innerHTML = sort.dir === "asc" ? "&#9650;" : "&#9660;";
+      }
+    });
+  }
+
+  /* Bar chart — Views per post, pink for the highest bar, brand blue otherwise. */
+  function renderChart() {
+    const canvas = document.getElementById("organicViewsChart");
+    if (typeof Chart === "undefined") return;
+    const maxViews = Math.max.apply(null, POSTS.map(p => p.views));
+    const colors = POSTS.map(p => p.views === maxViews ? "#D84890" : "#0060A8");
+
+    new Chart(canvas.getContext("2d"), {
+      type: "bar",
+      data: {
+        labels: POSTS.map(p => p.short),
+        datasets: [{
+          label: "Views",
+          data: POSTS.map(p => p.views),
+          backgroundColor: colors,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => "Views: " + ctx.parsed.y.toLocaleString("en-US") } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: "Inter", size: 12 } } },
+          y: {
+            beginAtZero: true,
+            ticks: { callback: v => v.toLocaleString("en-US"), font: { family: "Inter", size: 11 } },
+            grid: { color: "#ECE8E1" }
+          }
+        }
+      }
+    });
+    canvas.style.height = "300px";
+  }
+
+  document.querySelectorAll("#organicPostsTable th[data-key]").forEach(th => {
+    th.addEventListener("click", function () {
+      const key = th.dataset.key;
+      if (sort.key === key) {
+        sort.dir = sort.dir === "asc" ? "desc" : "asc";
+      } else {
+        sort.key = key;
+        sort.dir = (key === "post" || key === "date") ? "asc" : "desc";
+      }
+      renderTable();
+    });
+  });
+
+  renderStats();
+  renderTable();
+  renderChart();
 })();
 </script>
 
